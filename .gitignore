@@ -1,0 +1,36 @@
+# Python
+**/venv/
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+
+# Environment
+**/.env
+.env
+
+
+.env.*
+!.env.example
+
+# Alembic
+alembic/versions/*.pyc
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+
+
+Deathnote1
