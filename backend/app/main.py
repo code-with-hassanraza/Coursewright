@@ -7,6 +7,10 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
 
+from app.db.init_db import init_db
+from app.db.session import SessionLocal
+
+
 setup_logging()
 logger = get_logger(__name__)
 
@@ -14,9 +18,13 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Coursewright API starting up...")
+    db = SessionLocal()
+    try:
+        init_db(db)
+    finally:
+        db.close()
     yield
     logger.info("Coursewright API shutting down...")
-
 
 app = FastAPI(
     title="Coursewright API",
