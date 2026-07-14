@@ -1,10 +1,11 @@
 import uuid
 
 from sqlalchemy import Boolean, Column, ForeignKey, SmallInteger, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base, TimestampMixin
+from app.db.types import FlexibleJSON
 
 
 class Roadmap(Base, TimestampMixin):
@@ -15,7 +16,7 @@ class Roadmap(Base, TimestampMixin):
         UUID(as_uuid=True), ForeignKey("specializations.id"), nullable=False
     )
     title = Column(String(200), nullable=False)
-    nodes = Column(JSONB, nullable=False, default=list)
+    nodes = Column(FlexibleJSON, nullable=False, default=list)
     status = Column(String(20), nullable=False, default="draft")
     ai_generated = Column(Boolean, default=False, nullable=False)
     version = Column(SmallInteger, default=1, nullable=False)

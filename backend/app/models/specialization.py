@@ -1,10 +1,11 @@
 import uuid
 
 from sqlalchemy import Column, ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base, TimestampMixin
+from app.db.types import FlexibleJSON
 
 
 class Specialization(Base, TimestampMixin):
@@ -15,7 +16,7 @@ class Specialization(Base, TimestampMixin):
     name = Column(String(150), nullable=False)
     description = Column(Text, nullable=True)
     real_world_example = Column(Text, nullable=True)
-    job_roles = Column(JSONB, nullable=True, default=list)
+    job_roles = Column(FlexibleJSON, nullable=True, default=list)
     salary_range = Column(String(80), nullable=True)
     prerequisites = Column(Text, nullable=True)
     status = Column(String(20), nullable=False, default="draft")
@@ -38,3 +39,4 @@ class Specialization(Base, TimestampMixin):
     tasks = relationship("Task", back_populates="specialization")
     progress_records = relationship("UserProgress", back_populates="specialization")
     certificates = relationship("Certificate", back_populates="specialization")
+    

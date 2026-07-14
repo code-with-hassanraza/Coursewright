@@ -1,11 +1,15 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, SmallInteger, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import (
+    Column, DateTime, ForeignKey, SmallInteger,
+    String, UniqueConstraint
+)
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
+from app.db.types import FlexibleJSON
 
 
 class UserProgress(Base):
@@ -18,7 +22,7 @@ class UserProgress(Base):
     )
     roadmap_id = Column(UUID(as_uuid=True), ForeignKey("roadmaps.id"), nullable=True)
     status = Column(String(20), nullable=False, default="exploring")
-    completed_nodes = Column(JSONB, nullable=False, default=list)
+    completed_nodes = Column(FlexibleJSON, nullable=False, default=list)
     quiz_score = Column(SmallInteger, nullable=True)
     started_at = Column(DateTime, server_default=func.now(), nullable=False)
     completed_at = Column(DateTime, nullable=True)
@@ -30,3 +34,4 @@ class UserProgress(Base):
     user = relationship("User", back_populates="progress_records")
     specialization = relationship("Specialization", back_populates="progress_records")
     roadmap = relationship("Roadmap", back_populates="progress_records")
+    
