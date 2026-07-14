@@ -39,6 +39,7 @@ Usage examples:
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -182,9 +183,12 @@ def get_current_user(
             # with any algorithm not in this list. This prevents algorithm
             # confusion attacks (e.g. someone sending a 'none' algorithm token).
         )
-        user_id: str = payload.get("sub")
+        user_id = payload.get("sub")
         if user_id is None:
             raise credentials_exception
+
+        user_id = UUID(user_id)
+
 
     except JWTError:
         # Catches: expired tokens, invalid signatures, malformed tokens

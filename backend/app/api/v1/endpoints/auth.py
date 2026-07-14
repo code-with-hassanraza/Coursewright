@@ -27,7 +27,7 @@ def register(obj_in: UserCreate, db: Session = Depends(get_db)):
     user = crud_user.create(db, obj_in=obj_in)
     logger.info(f"New user registered: {user.email}")
     access_token = create_access_token(
-        data={"sub": str(user.id)},
+        subject=str(user.id),
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
     return Token(access_token=access_token)
