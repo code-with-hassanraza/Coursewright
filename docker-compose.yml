@@ -1,0 +1,156 @@
+# docker-compose.yml
+# Coursewright — Local Development Environment
+#
+# Two services:
+#   db      → PostgreSQL 15 (matches the production RDS engine version)
+#   backend → FastAPI app with hot-reload (code changes apply without rebuilding)
+#
+# ─── Common Commands ────────────────────────────────────────────────────────
+#
+#   First run (builds the image):
+#     docker compose up --build
+#
+#   Normal start (image already built):
+#     docker compose up
+#
+#   Run in background:
+#     docker compose up -d
+#
+#   Stop containers (keeps DB data):
+#     docker compose down
+#
+#   Stop AND delete DB data (fresh start):
+#     docker compose down -v
+#
+#   Watch backend logs only:
+#     docker compose logs -f backend
+#
+#   Open a shell inside the backend container:
+#     docker compose exec backend bash
+#
+#   Run Alembic migrations inside the container:
+#     docker compose exec backend alembic upgrade head
+#
+# ────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # SERVICE: db
+  # PostgreSQL 15 — matches the production RDS PostgreSQL 15.x engine.
+  # Using the same major version locally prevents migration surprises in prod.
+  # Alpine variant keeps the image ~70 MB instead of ~350 MB (Debian full).
+  # ──────────────────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: coursewright-db
+
+    environment:
+      # These values are only for local dev — they match what teammates
+      # must set in their backend/.env DATABASE_URL.
+      # Format: postgresql://POSTGRES_USER:POSTGRES_PASSWORD@db:5432/POSTGRES_DB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Your_Postgres_password
+      POSTGRES_DB: coursewright
+
+    ports:
+      # Maps container port 5432 → your Windows machine port 5432.
+      # Lets you connect with any Postgres GUI (pgAdmin, DBeaver, etc.)
+      # using localhost:5432 from your host machine.
+      - "5432:5432"
+
+    volumes:
+      # Named volume — persists all PostgreSQL data across docker compose down/up.
+      # Without this, every `docker compose down` wipes the database completely.
+      # The actual data lives in Docker's managed storage, not a folder you can see.
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      # pg_isready is the official Postgres connectivity checker.
+      # -U postgres   → check using the postgres superuser
+      # -d coursewright → check that the coursewright DB specifically is ready
+      #
+      # The backend service will NOT start until this check passes.
+      # This prevents the "connection refused" crash on first run.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d coursewright"]
+      interval: 5s       # Check every 5 seconds
+      timeout: 5s        # Each check must complete within 5 seconds
+      retries: 5         # Mark healthy after 5 consecutive successes
+      start_period: 10s  # Give Postgres 10s to initialize before checking starts
+
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # SERVICE: backend
+  # FastAPI application — built from backend/Dockerfile (Step 4).
+  # Runs with hot-reload: edit any .py file and uvicorn restarts automatically.
+  # No image rebuild needed for code changes during development.
+  # ──────────────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend   # Docker build context — everything in ./backend/
+      dockerfile: Dockerfile
+    container_name: coursewright-backend
+
+    ports:
+      # Maps container port 8000 → your Windows machine port 8000.
+      # Access the API at: http://localhost:8000
+      # Access Swagger docs at: http://localhost:8000/docs
+      - "8000:8000"
+
+    env_file:
+      # Loads all variables from backend/.env into the container environment.
+      # This is how settings.DATABASE_URL, settings.SECRET_KEY, etc. get
+      # their values inside the container.
+      #
+      # CRITICAL: The DATABASE_URL in backend/.env MUST use "db" as the host,
+      # NOT "localhost". Inside Docker, "localhost" means the backend container
+      # itself. "db" is the service name above, which resolves to the db container.
+      #
+      # ✅ Correct:   DATABASE_URL=postgresql://postgres:postgres@db:5432/coursewright
+      # ❌ Wrong:     DATABASE_URL=postgresql://postgres:postgres@localhost:5432/coursewright
+      - ./backend/.env
+
+    volumes:
+      # Mounts your local ./backend folder into the container at /app.
+      # This OVERLAYS the code that was COPY'd during docker build.
+      #
+      # Effect: any file you save locally is instantly visible inside the
+      # container. Combined with --reload below, changes apply in ~1 second.
+      #
+      # Why this doesn't break installed packages:
+      #   pip installs to /usr/local/lib/python3.11/site-packages/ (not /app).
+      #   The volume only overrides /app (your source code).
+      #   Installed packages are untouched.
+      - ./backend:/app
+
+    depends_on:
+      db:
+        # service_healthy waits for the db healthcheck above to pass.
+        # service_started (the default) only waits for the container to exist.
+        # We need service_healthy — Postgres must be accepting connections,
+        # not just running as a process.
+        condition: service_healthy
+
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir /app
+    # --host 0.0.0.0  → listen on all interfaces (required inside Docker;
+    #                   127.0.0.1 would be invisible outside the container)
+    # --reload        → watch for .py file changes and restart automatically
+    # --reload-dir    → explicitly tell uvicorn to watch /app (the mounted volume)
+
+    restart: unless-stopped
+
+# ────────────────────────────────────────────────────────────────────────────
+# VOLUMES
+# Named volumes are managed by Docker and persist between container restarts.
+# Visible with: docker volume ls
+# Delete with:  docker volume rm coursewright_postgres_data
+# ────────────────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    name: coursewright_postgres_data
