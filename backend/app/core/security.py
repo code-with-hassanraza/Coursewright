@@ -186,7 +186,6 @@ def get_current_user(
         user_id = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-
         user_id = UUID(user_id)
 
 
