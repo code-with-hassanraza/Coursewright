@@ -9,7 +9,7 @@ Usage (anywhere in the backend or AI service):
     from app.core.config import settings
 
     db_url   = settings.DATABASE_URL
-    ai_key   = settings.ANTHROPIC_API_KEY
+    ai_key   = settings.GEMINI_API_KEY
 
 In development: values are loaded from backend/.env
 In production:  values are injected as real env vars
