@@ -64,9 +64,8 @@ class Settings(BaseSettings):
     # Default to empty string so the app starts even if not yet set.
     # The AI service layer must handle the empty-string case gracefully.
     # ------------------------------------------------------------------
-    ANTHROPIC_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
 
     # ------------------------------------------------------------------
     # PYDANTIC-SETTINGS CONFIG
