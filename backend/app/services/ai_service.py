@@ -31,7 +31,7 @@ logger = get_logger(__name__)
 
 # ── Model constants ────────────────────────────────────────────────────────────
 
-ROADMAP_PRIMARY    = "gemini-3-flash"
+ROADMAP_PRIMARY    = "gemini-3.5-flash"
 ROADMAP_FALLBACK_1 = "llama-3.3-70b-versatile"
 ROADMAP_FALLBACK_2 = "openai/gpt-oss-120b"
 
