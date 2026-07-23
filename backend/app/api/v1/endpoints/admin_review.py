@@ -1,8 +1,10 @@
 from uuid import UUID
-
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.schemas.roadmap import RoadmapResponse
+from app.schemas.review import ReviewResponse
 from app.core.logging import get_logger
 from app.core.security import require_role
 from app.crud import crud_review, crud_specialization, crud_roadmap
@@ -102,3 +104,41 @@ def list_drafts(
         db, page=page, size=size
     )
     return PaginatedResponse(items=items, total=total, page=page, size=size)
+
+class GenerateRoadmapResponse(BaseModel):
+    roadmap_id: str
+    review_id: str
+    message: str
+
+@router.post(
+    "/generate-roadmap/{specialization_id}",
+    response_model=GenerateRoadmapResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def generate_roadmap(
+    specialization_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    """
+    Trigger full AI pipeline:
+    specialization → AI nodes → AI resources → draft roadmap → pending review
+    """
+    from app.services.review_service import trigger_generation
+
+    logger.info(
+        f"AI roadmap generation triggered for specialization "
+        f"{specialization_id} by {current_user.email}"
+    )
+
+    result = trigger_generation(
+        specialization_id=specialization_id,
+        reviewer_id=current_user.id,
+        db=db,
+    )
+
+    return GenerateRoadmapResponse(
+        roadmap_id=str(result["roadmap"].id),
+        review_id=str(result["review"].id),
+        message=f"Roadmap generated with {len(result['roadmap'].nodes)} nodes. Pending review.",
+    )

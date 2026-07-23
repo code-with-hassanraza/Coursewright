@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from uuid import UUID
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
 from app.core.security import get_current_user
+from app.crud import crud_roadmap
 from app.db.session import get_db
 from app.models.user import User
 
@@ -28,21 +30,26 @@ def send_message(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Stub endpoint — routes to AI service (owned by AI teammate).
-    AI teammate will replace the body of this function with
-    their service call. Do not modify the request/response schemas
-    without coordinating with the AI teammate first.
-    """
     logger.info(
         f"Chat message from {current_user.email}: {obj_in.message[:50]}"
     )
 
-    # TODO: AI teammate replaces this stub with actual AI service call
-    # from app.services.ai_service import get_ai_response
-    # return get_ai_response(obj_in.message, obj_in.specialization_id)
+    # Fetch roadmap nodes for context if roadmap_id provided
+    nodes = []
+    if obj_in.roadmap_id:
+        try:
+            roadmap = crud_roadmap.get(db, roadmap_id=UUID(obj_in.roadmap_id))
+            if roadmap:
+                nodes = roadmap.nodes or []
+        except Exception:
+            pass  # Invalid UUID or not found — proceed with empty context
 
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Chat service not yet available — AI teammate is implementing this",
+    from app.services.ai_service import AIService
+    ai = AIService()
+    result = ai.chat_with_context(message=obj_in.message, nodes=nodes)
+
+    logger.info(
+        f"Chat response via {result['source']} "
+        f"for {current_user.email}"
     )
+    return ChatResponse(reply=result["reply"], source=result["source"])
