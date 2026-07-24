@@ -10,37 +10,6 @@ from app.core.security import get_password_hash
 
 
 @pytest.fixture
-def admin_user(db: Session):
-    """Create an admin user directly in the test DB."""
-    user = User(
-        email="admin@test.com",
-        password_hash=get_password_hash("adminpass123"),
-        full_name="Admin User",
-        role="admin",
-        is_active=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-@pytest.fixture
-def admin_headers(client: TestClient, admin_user):
-    """Login as admin and return auth headers."""
-    response = client.post(
-        "/api/v1/auth/login",
-        data={
-            "username": admin_user.email,
-            "password": "adminpass123",
-        },
-    )
-    assert response.status_code == 200
-    token = response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
-
-
-@pytest.fixture
 def test_field(db: Session):
     """Create a test field directly in DB."""
     field = Field(
