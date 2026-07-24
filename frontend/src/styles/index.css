@@ -1,0 +1,236 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/* A handful of tokens kept as CSS variables for non-Tailwind-class     */
+/* contexts (inline styles, box-shadow colors that need alpha mixing). */
+/* The full palette lives in tailwind.config.js as the source of truth. */
+/* ------------------------------------------------------------------ */
+:root {
+  --color-primary: #e60023;
+  --color-primary-pressed: #cc001f;
+  --color-ink: #000000;
+  --color-focus-outer: #435ee5;
+}
+
+/* ------------------------------------------------------------------ */
+/* Material Symbols Outlined — DESIGN.md's icon system.                 */
+/* Default axis settings render the outlined style; individual icons    */
+/* opt into the filled style per-instance with `style="font-variation-  */
+/* settings: 'FILL' 1"` (matches the reference screens' convention).    */
+/* ------------------------------------------------------------------ */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base element styles                                                  */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Page canvas: white/near-white in every reference screen, even though
+     DESIGN.md's `background` token (#fff8f7) leans warmer — the examples
+     consistently render on `canvas`/`surface-soft`, with `surface-card`
+     used for banded sections. Following the examples here. */
+  body {
+    @apply bg-canvas text-body-text font-body-md text-body-md antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-ink;
+  }
+
+  a {
+    @apply text-primary;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  /* Keyboard focus uses the dedicated focus-outer/focus-inner pair from
+     DESIGN.md rather than the brand red, matching the sign-up form's
+     `focus:ring-focus-outer` treatment. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-outer);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Component-layer classes — direct implementations of DESIGN.md's      */
+/* `components` table (button-primary, button-secondary, search-bar,    */
+/* pin-card, modal-card, nav-bar), plus the recurring shadow/grid        */
+/* utilities used across the reference screens.                         */
+/* ------------------------------------------------------------------ */
+@layer components {
+  /* components.button-primary */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-xs h-10 px-xl
+      bg-primary text-on-primary font-button-md text-button-md rounded-md
+      transition-colors hover:bg-primary-container active:scale-95
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  /* components.button-secondary */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-xs h-10 px-xl
+      bg-secondary-bg text-on-secondary font-button-md text-button-md rounded-md
+      transition-colors hover:bg-secondary-pressed active:scale-95
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-xs h-10 px-xl
+      bg-transparent text-primary border border-hairline font-button-md text-button-md rounded-md
+      transition-colors hover:bg-surface-card active:scale-95
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  /* components.search-bar */
+  .search-bar {
+    @apply w-full h-12 bg-surface-card text-ink font-body-md text-body-md
+      rounded-full py-[11px] px-[15px] border border-hairline-soft
+      placeholder:text-ash focus:outline-none focus:border-focus-outer
+      focus:ring-1 focus:ring-focus-outer transition-all;
+  }
+
+  /* Standard form input — same visual language as search-bar but square-cornered,
+     matching the sign-up form fields. */
+  .input {
+    @apply appearance-none block w-full px-md py-md border border-hairline
+      rounded-lg bg-surface-card text-ink placeholder-ash font-body-sm text-body-sm
+      focus:outline-none focus:ring-2 focus:ring-focus-outer focus:border-transparent
+      transition-all;
+  }
+
+  .label {
+    @apply block text-body-sm-strong font-body-sm-strong text-ink mb-xs;
+  }
+
+  /* components.pin-card */
+  .pin-card {
+    @apply bg-surface-card text-ink rounded-md overflow-hidden border border-hairline-soft
+      transition-shadow cursor-pointer;
+  }
+
+  .pin-card:hover {
+    box-shadow: 0 20px 40px -10px rgba(230, 0, 35, 0.1);
+  }
+
+  /* components.modal-card */
+  .modal-card {
+    @apply bg-canvas text-ink font-body-md text-body-md rounded-lg p-xxl;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+  }
+
+  /* components.nav-bar */
+  .nav-bar {
+    @apply fixed top-0 w-full z-50 flex justify-between items-center px-margin
+      h-16 bg-canvas text-ink font-body-strong text-body-strong border-b border-hairline-soft;
+  }
+
+  /* Generic soft elevation used throughout the reference screens for
+     cards that lift on hover (bento cards, highlight tiles, etc). */
+  .custom-shadow {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+  }
+
+  .custom-shadow-hover {
+    transition: box-shadow 0.2s ease;
+  }
+
+  .custom-shadow-hover:hover {
+    box-shadow: 0 20px 40px -10px rgba(230, 0, 35, 0.1);
+  }
+
+  .bento-card {
+    @apply bg-surface-card rounded-md p-xl transition-all duration-300;
+  }
+
+  .bento-card:hover {
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+  }
+
+  .bento-card-large {
+    @apply rounded-lg;
+  }
+
+  /* Masonry discovery grid (Trending Specializations, Field Explorer results).
+     Plain CSS columns — Tailwind has no multi-column utility, and this
+     matches the reference screens' implementation exactly. */
+  .masonry-grid {
+    column-count: 1;
+    column-gap: 16px;
+  }
+
+  @media (min-width: 640px) {
+    .masonry-grid {
+      column-count: 2;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .masonry-grid {
+      column-count: 3;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .masonry-grid {
+      column-count: 4;
+    }
+  }
+
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

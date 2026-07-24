@@ -33,3 +33,15 @@ Thumbs.db
 
 # AWS secrets file Update Your Placeholder Values in infra/aws/secrets.example.json and rename to infra/aws/secrets.json
 infra/aws/secrets.json
+
+
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
