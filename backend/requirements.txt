@@ -7,9 +7,9 @@
 # -----------------------------
 # Database
 # -----------------------------
-SQLAlchemy==2.0.30
+SQLAlchemy==2.0.41
 alembic==1.13.1
-psycopg2-binary==2.9.9
+psycopg2-binary
 greenlet==3.5.3
 
 # -----------------------------
