@@ -18,6 +18,7 @@ import {
   generateCertificate,
 } from "../services/certificateService";
 import { getErrorMessage } from "../utils/errors";
+import Chatbot from "../components/chatbot/Chatbot";
 
 const TYPE_BADGE_STYLES = {
   topic: "bg-primary-container/10 text-primary",
@@ -155,6 +156,7 @@ export default function Roadmap() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -261,270 +263,297 @@ export default function Roadmap() {
   const topLevelNodes = childrenByParent.get(null) || [];
 
   return (
-    <PageWrapper
-      isLoading={isLoading}
-      error={error}
-      onRetry={load}
-      maxWidth="max-w-5xl"
-    >
-      {!roadmap ? (
-        <div className="rounded-md border border-hairline-soft bg-surface-card p-xl text-center">
-          <p className="font-heading-md text-heading-md text-ink">
-            No roadmap published yet
-          </p>
-          <p className="mt-xs font-body-sm text-body-sm text-mute">
-            Check back soon, or explore other specializations in the meantime.
-          </p>
-          <Link to="/fields" className="btn-primary mt-lg inline-flex">
-            Explore Fields
-          </Link>
-        </div>
-      ) : (
-        <div>
-          <h1 className="font-heading-xl text-heading-xl text-ink">
-            {roadmap.title || spec?.name}
-          </h1>
-          {spec && (
-            <p className="mt-xs font-body-sm text-body-sm text-mute">
-              {spec.name}
+    <>
+      <PageWrapper
+        isLoading={isLoading}
+        error={error}
+        onRetry={load}
+        maxWidth="max-w-5xl"
+      >
+        {!roadmap ? (
+          <div className="rounded-md border border-hairline-soft bg-surface-card p-xl text-center">
+            <p className="font-heading-md text-heading-md text-ink">
+              No roadmap published yet
             </p>
-          )}
-
-          {!progress ? (
-            <div className="mt-lg flex flex-col items-start gap-md rounded-md border border-hairline-soft bg-surface-card p-lg sm:flex-row sm:items-center sm:justify-between">
-              <p className="font-body-sm text-body-sm text-ink">
-                You haven't started tracking progress on this path yet.
-              </p>
-              <button
-                onClick={handleStart}
-                disabled={isStarting}
-                className="btn-primary shrink-0"
-              >
-                {isStarting ? "Starting…" : "Start Exploring"}
-              </button>
-            </div>
-          ) : (
-            <div className="mt-lg">
-              <div className="flex items-center justify-between font-body-sm-strong text-body-sm-strong text-ink">
-                <span>
-                  {completedTaskCount} of {totalTasks} tasks complete
-                </span>
-                <span>{percent}%</span>
-              </div>
-              <div className="mt-xs h-2 w-full overflow-hidden rounded-full bg-secondary-bg">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="mt-xl">
-            <h2 className="font-heading-lg text-heading-lg text-ink">
-              Curriculum
-            </h2>
-            {topLevelNodes.length === 0 ? (
-              <p className="mt-md font-body-sm text-body-sm text-mute">
-                This roadmap doesn't have any content yet.
-              </p>
-            ) : (
-              topLevelNodes.map((node) => (
-                <NodeItem
-                  key={node.id}
-                  node={node}
-                  childrenByParent={childrenByParent}
-                />
-              ))
-            )}
+            <p className="mt-xs font-body-sm text-body-sm text-mute">
+              Check back soon, or explore other specializations in the meantime.
+            </p>
+            <Link to="/fields" className="btn-primary mt-lg inline-flex">
+              Explore Fields
+            </Link>
           </div>
+        ) : (
+          <div>
+            <h1 className="font-heading-xl text-heading-xl text-ink">
+              {roadmap.title || spec?.name}
+            </h1>
+            {spec && (
+              <p className="mt-xs font-body-sm text-body-sm text-mute">
+                {spec.name}
+              </p>
+            )}
 
-          {tasks.length > 0 && (
+            {!progress ? (
+              <div className="mt-lg flex flex-col items-start gap-md rounded-md border border-hairline-soft bg-surface-card p-lg sm:flex-row sm:items-center sm:justify-between">
+                <p className="font-body-sm text-body-sm text-ink">
+                  You haven't started tracking progress on this path yet.
+                </p>
+                <button
+                  onClick={handleStart}
+                  disabled={isStarting}
+                  className="btn-primary shrink-0"
+                >
+                  {isStarting ? "Starting…" : "Start Exploring"}
+                </button>
+              </div>
+            ) : (
+              <div className="mt-lg">
+                <div className="flex items-center justify-between font-body-sm-strong text-body-sm-strong text-ink">
+                  <span>
+                    {completedTaskCount} of {totalTasks} tasks complete
+                  </span>
+                  <span>{percent}%</span>
+                </div>
+                <div className="mt-xs h-2 w-full overflow-hidden rounded-full bg-secondary-bg">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="mt-xl">
               <h2 className="font-heading-lg text-heading-lg text-ink">
-                Practice Tasks
+                Curriculum
               </h2>
-              <div className="mt-md grid gap-md sm:grid-cols-2">
-                {tasks.map((task) => {
-                  const taskDone = completedSet.has(task.id);
-                  return (
-                    <Link
-                      key={task.id}
-                      to={`/tasks/${task.id}`}
-                      className="pin-card custom-shadow-hover flex items-center gap-md p-md"
-                    >
-                      <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                          taskDone
-                            ? "bg-primary text-on-primary"
-                            : "bg-secondary-bg text-on-secondary"
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-base">
-                          {taskDone ? "check" : "radio_button_unchecked"}
-                        </span>
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-body-strong text-body-strong text-ink">
-                          {task.title}
-                        </p>
-                        <p className="font-body-sm text-body-sm text-mute">
-                          {task.difficulty}
-                        </p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+              {topLevelNodes.length === 0 ? (
+                <p className="mt-md font-body-sm text-body-sm text-mute">
+                  This roadmap doesn't have any content yet.
+                </p>
+              ) : (
+                topLevelNodes.map((node) => (
+                  <NodeItem
+                    key={node.id}
+                    node={node}
+                    childrenByParent={childrenByParent}
+                  />
+                ))
+              )}
             </div>
-          )}
 
-          {certificate ? (
-            <div className="mt-xl rounded-md border border-hairline-soft bg-surface-card p-xl text-center">
-              <span className="material-symbols-outlined text-primary">
-                workspace_premium
-              </span>
-              <p className="mt-xs font-heading-md text-heading-md text-ink">
-                Certificate Earned
-              </p>
-              <Link to="/profile" className="btn-outline mt-md inline-flex">
-                View in Profile
-              </Link>
-            </div>
-          ) : (
-            quiz && (
-              <div className="mt-xl rounded-md border border-hairline-soft bg-surface-card p-xl">
+            {tasks.length > 0 && (
+              <div className="mt-xl">
                 <h2 className="font-heading-lg text-heading-lg text-ink">
-                  {quiz.title}
+                  Practice Tasks
                 </h2>
-
-                {!quizResult ? (
-                  <form
-                    onSubmit={handleQuizSubmit}
-                    className="mt-md flex flex-col gap-lg"
-                  >
-                    {quiz.questions.map((q, i) => (
-                      <div key={q.id}>
-                        <p className="font-body-strong text-body-strong text-ink">
-                          {i + 1}. {q.question}
-                        </p>
-                        <div className="mt-sm flex flex-col gap-xs">
-                          {q.options.map((option) => (
-                            <label
-                              key={option}
-                              className="flex items-center gap-xs"
-                            >
-                              <input
-                                type="radio"
-                                name={q.id}
-                                value={option}
-                                checked={answers[q.id] === option}
-                                onChange={() =>
-                                  setAnswers((prev) => ({
-                                    ...prev,
-                                    [q.id]: option,
-                                  }))
-                                }
-                                className="accent-primary"
-                              />
-                              <span className="font-body-sm text-body-sm text-ink">
-                                {option}
-                              </span>
-                            </label>
-                          ))}
+                <div className="mt-md grid gap-md sm:grid-cols-2">
+                  {tasks.map((task) => {
+                    const taskDone = completedSet.has(task.id);
+                    return (
+                      <Link
+                        key={task.id}
+                        to={`/tasks/${task.id}`}
+                        className="pin-card custom-shadow-hover flex items-center gap-md p-md"
+                      >
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                            taskDone
+                              ? "bg-primary text-on-primary"
+                              : "bg-secondary-bg text-on-secondary"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-base">
+                            {taskDone ? "check" : "radio_button_unchecked"}
+                          </span>
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-body-strong text-body-strong text-ink">
+                            {task.title}
+                          </p>
+                          <p className="font-body-sm text-body-sm text-mute">
+                            {task.difficulty}
+                          </p>
                         </div>
-                      </div>
-                    ))}
-
-                    {quizError && (
-                      <p className="rounded-md border border-error-container bg-error-container px-md py-sm font-body-sm text-body-sm text-on-error-container">
-                        {quizError}
-                      </p>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={
-                        isSubmittingQuiz ||
-                        Object.keys(answers).length < quiz.questions.length
-                      }
-                      className="btn-primary justify-center"
-                    >
-                      {isSubmittingQuiz ? "Submitting…" : "Submit Quiz"}
-                    </button>
-                  </form>
-                ) : (
-                  <div className="mt-md">
-                    <p
-                      className={`font-heading-md text-heading-md ${quizResult.passed ? "text-primary" : "text-error"}`}
-                    >
-                      {quizResult.score}% —{" "}
-                      {quizResult.passed ? "Passed" : "Not passed yet"}
-                    </p>
-                    <p className="font-body-sm text-body-sm text-mute">
-                      {quizResult.correct} of {quizResult.total} correct (pass
-                      mark: {quizResult.pass_score}%)
-                    </p>
-
-                    <div className="mt-lg flex flex-col gap-md">
-                      {quiz.questions.map((q, i) => {
-                        const userAnswer = answers[q.id];
-                        const wasCorrect = userAnswer === q.correct;
-                        return (
-                          <div key={q.id} className="rounded-md bg-canvas p-md">
-                            <p className="font-body-strong text-body-strong text-ink">
-                              {i + 1}. {q.question}
-                            </p>
-                            <p
-                              className={`mt-xs font-body-sm text-body-sm ${wasCorrect ? "text-primary" : "text-error"}`}
-                            >
-                              Your answer: {userAnswer || "(none)"}
-                              {!wasCorrect && ` — correct answer: ${q.correct}`}
-                            </p>
-                            {q.explanation && (
-                              <p className="mt-xs font-body-sm text-body-sm text-mute">
-                                {q.explanation}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {certError && (
-                      <p className="mt-lg rounded-md border border-error-container bg-error-container px-md py-sm font-body-sm text-body-sm text-on-error-container">
-                        {certError}
-                      </p>
-                    )}
-
-                    {quizResult.passed ? (
-                      <button
-                        onClick={handleGenerateCertificate}
-                        disabled={isGeneratingCert}
-                        className="btn-primary mt-lg justify-center"
-                      >
-                        {isGeneratingCert
-                          ? "Generating…"
-                          : "Generate Certificate"}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          setQuizResult(null);
-                          setAnswers({});
-                        }}
-                        className="btn-secondary mt-lg justify-center"
-                      >
-                        Try Again
-                      </button>
-                    )}
-                  </div>
-                )}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            )
-          )}
-        </div>
+            )}
+
+            {certificate ? (
+              <div className="mt-xl rounded-md border border-hairline-soft bg-surface-card p-xl text-center">
+                <span className="material-symbols-outlined text-primary">
+                  workspace_premium
+                </span>
+                <p className="mt-xs font-heading-md text-heading-md text-ink">
+                  Certificate Earned
+                </p>
+                <Link to="/profile" className="btn-outline mt-md inline-flex">
+                  View in Profile
+                </Link>
+              </div>
+            ) : (
+              quiz && (
+                <div className="mt-xl rounded-md border border-hairline-soft bg-surface-card p-xl">
+                  <h2 className="font-heading-lg text-heading-lg text-ink">
+                    {quiz.title}
+                  </h2>
+
+                  {!quizResult ? (
+                    <form
+                      onSubmit={handleQuizSubmit}
+                      className="mt-md flex flex-col gap-lg"
+                    >
+                      {quiz.questions.map((q, i) => (
+                        <div key={q.id}>
+                          <p className="font-body-strong text-body-strong text-ink">
+                            {i + 1}. {q.question}
+                          </p>
+                          <div className="mt-sm flex flex-col gap-xs">
+                            {q.options.map((option) => (
+                              <label
+                                key={option}
+                                className="flex items-center gap-xs"
+                              >
+                                <input
+                                  type="radio"
+                                  name={q.id}
+                                  value={option}
+                                  checked={answers[q.id] === option}
+                                  onChange={() =>
+                                    setAnswers((prev) => ({
+                                      ...prev,
+                                      [q.id]: option,
+                                    }))
+                                  }
+                                  className="accent-primary"
+                                />
+                                <span className="font-body-sm text-body-sm text-ink">
+                                  {option}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+
+                      {quizError && (
+                        <p className="rounded-md border border-error-container bg-error-container px-md py-sm font-body-sm text-body-sm text-on-error-container">
+                          {quizError}
+                        </p>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={
+                          isSubmittingQuiz ||
+                          Object.keys(answers).length < quiz.questions.length
+                        }
+                        className="btn-primary justify-center"
+                      >
+                        {isSubmittingQuiz ? "Submitting…" : "Submit Quiz"}
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="mt-md">
+                      <p
+                        className={`font-heading-md text-heading-md ${quizResult.passed ? "text-primary" : "text-error"}`}
+                      >
+                        {quizResult.score}% —{" "}
+                        {quizResult.passed ? "Passed" : "Not passed yet"}
+                      </p>
+                      <p className="font-body-sm text-body-sm text-mute">
+                        {quizResult.correct} of {quizResult.total} correct (pass
+                        mark: {quizResult.pass_score}%)
+                      </p>
+
+                      <div className="mt-lg flex flex-col gap-md">
+                        {quiz.questions.map((q, i) => {
+                          const userAnswer = answers[q.id];
+                          const wasCorrect = userAnswer === q.correct;
+                          return (
+                            <div
+                              key={q.id}
+                              className="rounded-md bg-canvas p-md"
+                            >
+                              <p className="font-body-strong text-body-strong text-ink">
+                                {i + 1}. {q.question}
+                              </p>
+                              <p
+                                className={`mt-xs font-body-sm text-body-sm ${wasCorrect ? "text-primary" : "text-error"}`}
+                              >
+                                Your answer: {userAnswer || "(none)"}
+                                {!wasCorrect &&
+                                  ` — correct answer: ${q.correct}`}
+                              </p>
+                              {q.explanation && (
+                                <p className="mt-xs font-body-sm text-body-sm text-mute">
+                                  {q.explanation}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {certError && (
+                        <p className="mt-lg rounded-md border border-error-container bg-error-container px-md py-sm font-body-sm text-body-sm text-on-error-container">
+                          {certError}
+                        </p>
+                      )}
+
+                      {quizResult.passed ? (
+                        <button
+                          onClick={handleGenerateCertificate}
+                          disabled={isGeneratingCert}
+                          className="btn-primary mt-lg justify-center"
+                        >
+                          {isGeneratingCert
+                            ? "Generating…"
+                            : "Generate Certificate"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setQuizResult(null);
+                            setAnswers({});
+                          }}
+                          className="btn-secondary mt-lg justify-center"
+                        >
+                          Try Again
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </PageWrapper>
+
+      {roadmap && (
+        <>
+          <button
+            onClick={() => setChatOpen((v) => !v)}
+            className="fixed bottom-xl right-xl z-20 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-xl hover:bg-primary-pressed"
+            aria-label="Open learning assistant"
+          >
+            <span className="material-symbols-outlined">
+              {chatOpen ? "close" : "smart_toy"}
+            </span>
+          </button>
+
+          <Chatbot
+            specializationId={spec_id}
+            roadmapId={roadmap?.id}
+            isOpen={chatOpen}
+            onClose={() => setChatOpen(false)}
+          />
+        </>
       )}
-    </PageWrapper>
+    </>
   );
 }
